@@ -1,17 +1,30 @@
 package main;
 
+import handler.ErrorHandler;
+import handler.GetAllBooks;
+import handler.IHandler;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
+import bean.Request;
+import bean.Response;
+import utils.MatcherUtils;
 import utils.Utils;
+import bean.Handler;
 
 public abstract class Server {
 
     private static int port = 8080;
+
+    private final static List<Handler> handlers = new ArrayList<>();
 
     @SuppressWarnings("resource")
     public static void start() throws Throwable {
@@ -19,14 +32,32 @@ public abstract class Server {
 	ServerSocket servers = new ServerSocket(port);
 	while (true) {
 	    Socket socket = servers.accept();
-	    System.err.println("Client accepted");
 	    new Thread(new SocketProcessor(socket)).start();
 	}
+	 
+    }
+
+    public static void addHandler(String method, String uri, IHandler handler) {
+	handlers.add(new Handler(method, uri, handler));
+
+    }
+
+    public static Handler findHandler(Request req) {
+	Handler errorHandler = new Handler(null, null, new ErrorHandler());
+	for (Handler handler : handlers) {
+	    if (req.getMethod().equals(handler.getMethod())
+		    && MatcherUtils.match(handler.getUri(),
+			    (req.getRequestURI()))) {
+	    }
+	    return handler;
+	}
+	return errorHandler;
+
     }
 
     private static class SocketProcessor implements Runnable {
 	private BufferedReader request;
-	private PrintWriter response;
+	private OutputStream response;
 	private Socket socket;
 
 	public SocketProcessor(Socket socket) throws Throwable {
@@ -37,8 +68,14 @@ public abstract class Server {
 	    try {
 		request = new BufferedReader(new InputStreamReader(
 			socket.getInputStream()));
-		response = new PrintWriter(socket.getOutputStream(), true);
-		System.out.println(Utils.getRequest(request).getBody());
+		response = socket.getOutputStream();
+		Request req = new Request();
+		req = Utils.getRequest(request);
+		System.out.println(req.getBody());
+		Response res = new Response();
+		Handler handlerForInvoke = findHandler(req);
+		handlerForInvoke.getiHandle().handle(req, res);
+		Utils.writeResponseMessage(res,response);
 	    } catch (IOException e1) {
 		e1.printStackTrace();
 	    } finally {

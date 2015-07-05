@@ -2,11 +2,13 @@ package utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 import bean.Request;
+import bean.Response;
 
 public class Utils {
 
@@ -20,6 +22,7 @@ public class Utils {
 	while (true) {
 	    requestString = request.readLine();
 	    headerValue.add(requestString);
+	     System.out.println(headerValue);
 	    if (requestString == null || requestString.trim().length() == 0) {
 		break;
 	    }
@@ -28,7 +31,11 @@ public class Utils {
 	req.setContentLength(getLenght(headerValue));
 	req.setContentType(getContentType(headerValue));
 	System.out.println(req.getContentLength());
-	getRequestLine(headerValue, req);
+	if (getMethod(headerValue, req).equals("GET")) {
+	    getGetRequestLine(headerValue, req);
+	} else {
+	    getPostRequestLine(headerValue, req);
+	}
 
 	if (req.getContentLength() > 0) {
 	    req.setBody(getPostBody(request, req.getContentLength()));
@@ -37,7 +44,14 @@ public class Utils {
 	return req;
     }
 
-    public static void getRequestLine(List<String> list, Request req) {
+    public static String getMethod(List<String> list, Request req) {
+	String line = list.get(0);
+	String method = line.split(" ")[0].trim();
+	req.setMethod(method);
+	return method;
+    }
+
+    public static void getPostRequestLine(List<String> list, Request req) {
 	String line = list.get(0);
 	if (line.split("/")[1].trim().equalsIgnoreCase("HTTP")) {
 	    req.setProtocol(line.split("/")[1].trim());
@@ -47,7 +61,20 @@ public class Utils {
 	    req.setVersionProtocol(line.split("/")[3].trim());
 	    req.setRequestURI(line.split(" ")[1]);
 	}
-	req.setMethod(line.split(" ")[0].trim());
+
+    }
+
+    public static void getGetRequestLine(List<String> list, Request req) {
+	String line = list.get(0);
+	if (line.split("/")[1].trim().equalsIgnoreCase(" HTTP")) {
+	    req.setProtocol(line.split(" ")[2].split("/")[1].trim());
+	    req.setVersionProtocol(line.split("/")[2].trim());
+	} else {
+	    req.setProtocol(line.split(" ")[2].split("/")[1].trim());
+	    req.setVersionProtocol(line.split("/")[2].trim());
+	    req.setRequestURI(line.split(" ")[1].split("/")[1].trim());
+	}
+
     }
 
     public static int getLenght(List<String> list) {
@@ -94,6 +121,25 @@ public class Utils {
 	    }
 	}
 	return postRequest.toString();
+    }
+
+    public static void writeResponseMessage(Response res, OutputStream response) {
+	String protocolVersion = String.format("Protocol version: ",
+		res.getProtocol(), "/", res.getVersionProtocol());
+	String contentType = String.format("Content type: "
+		+ res.getContentType());
+	String contentLength = String.format("Content lenghtÖ "
+		+ res.getContentLenght());
+	String result = protocolVersion + " " + res.getStatusCode() + " "
+		+ res.getDescription() + "\r\n" + contentType + "\r\n"
+		+ contentLength + "\r\n\r\n" + res.getBody();
+	try {
+	    response.write(result.getBytes());
+	    response.flush();
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
+
     }
 
 }
