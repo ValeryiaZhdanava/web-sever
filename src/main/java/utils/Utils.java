@@ -6,43 +6,71 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import bean.Request;
+
 public class Utils {
 
-    public static List<String> getHeaderValue(BufferedReader request)
-	    throws IOException {
+    private static List<String> headerValue = new ArrayList<String>();
 
+    public static Request getRequest(BufferedReader request) throws IOException {
+
+	Request req = new Request();
 	String requestString;
-	List<String> listArray = new ArrayList<String>();
-	List<String> headerValue = new ArrayList<String>(); 
 
-
-	while ((requestString = request.readLine()) != null) {
-	    listArray.add(requestString);
-	    if (requestString.isEmpty()) {
+	while (true) {
+	    requestString = request.readLine();
+	    headerValue.add(requestString);
+	    if (requestString == null || requestString.trim().length() == 0) {
 		break;
 	    }
 	}
-	request.close();
-	List<String> headersValue = Utils.parseHeader(listArray);
-	String contentLenght = Utils.getLenght(headersValue);
-	int valueContentLenght = Integer.parseInt(contentLenght.split(":")[1]
-		.trim());
-	if (valueContentLenght > 0) {
-	    headerValue.add(getPostBody(request, valueContentLenght));
+
+	req.setContentLength(getLenght(headerValue));
+	req.setContentType(getContentType(headerValue));
+	System.out.println(req.getContentLength());
+	getRequestLine(headerValue, req);
+
+	if (req.getContentLength() > 0) {
+	    req.setBody(getPostBody(request, req.getContentLength()));
 	}
 
-	return headerValue;
+	return req;
     }
 
-    public static String getLenght(List<String> list) {
-	String content = "";
+    public static void getRequestLine(List<String> list, Request req) {
+	String line = list.get(0);
+	if (line.split("/")[1].trim().equalsIgnoreCase("HTTP")) {
+	    req.setProtocol(line.split("/")[1].trim());
+	    req.setVersionProtocol(line.split("/")[2].trim());
+	} else {
+	    req.setProtocol(line.split("/")[2].trim());
+	    req.setVersionProtocol(line.split("/")[3].trim());
+	    req.setRequestURI(line.split(" ")[1]);
+	}
+	req.setMethod(line.split(" ")[0].trim());
+    }
+
+    public static int getLenght(List<String> list) {
+	int valueContentLenght = 0;
 	for (String line : list) {
 	    if (line.contains("Content-Length")) {
-		content = line;
+		valueContentLenght = Integer
+			.parseInt(line.split(":")[1].trim());
 		break;
 	    }
 	}
-	return content;
+	return valueContentLenght;
+    }
+
+    public static String getContentType(List<String> list) {
+	String valueContentType = "";
+	for (String line : list) {
+	    if (line.contains("Content-Type")) {
+		valueContentType = (line.split(":")[1].trim());
+		break;
+	    }
+	}
+	return valueContentType;
     }
 
     public static List<String> parseHeader(List<String> headerMas) {
@@ -67,4 +95,5 @@ public class Utils {
 	}
 	return postRequest.toString();
     }
+
 }

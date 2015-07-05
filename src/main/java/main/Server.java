@@ -7,35 +7,29 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import utils.Utils;
+
 public abstract class Server {
 
-    private int port = 8080;
-
-    public Server(int port) {
-	this.port = port;
-    }
+    private static int port = 8080;
 
     @SuppressWarnings("resource")
-    public void start() throws IOException {
+    public static void start() throws Throwable {
 
 	ServerSocket servers = new ServerSocket(port);
 	while (true) {
 	    Socket socket = servers.accept();
+	    System.err.println("Client accepted");
+	    new Thread(new SocketProcessor(socket)).start();
 	}
     }
 
-    public void stop() {
-    }
-
-    public abstract void service(BufferedReader request, PrintWriter response)
-	    throws IOException;
-
-    private class SocketProcessor implements Runnable {
+    private static class SocketProcessor implements Runnable {
 	private BufferedReader request;
 	private PrintWriter response;
 	private Socket socket;
 
-	public SocketProcessor(Socket socket) {
+	public SocketProcessor(Socket socket) throws Throwable {
 	    this.socket = socket;
 	}
 
@@ -44,19 +38,15 @@ public abstract class Server {
 		request = new BufferedReader(new InputStreamReader(
 			socket.getInputStream()));
 		response = new PrintWriter(socket.getOutputStream(), true);
+		System.out.println(Utils.getRequest(request).getBody());
 	    } catch (IOException e1) {
 		e1.printStackTrace();
-	    }
-
-	    try {
-		service(request, response);
-	    } catch (IOException e) {
-		e.printStackTrace();
-	    }
-	    try {
-		this.socket.close();
-	    } catch (IOException e) {
-		e.printStackTrace();
+	    } finally {
+		try {
+		    socket.close();
+		} catch (IOException e) {
+		    e.printStackTrace();
+		}
 	    }
 	}
     }
