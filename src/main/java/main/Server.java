@@ -1,24 +1,22 @@
 package main;
 
 import handler.ErrorHandler;
-import handler.GetAllBooks;
 import handler.IHandler;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-import bean.Request;
-import bean.Response;
 import utils.MatcherUtils;
 import utils.Utils;
 import bean.Handler;
+import bean.Request;
+import bean.Response;
 
 public abstract class Server {
 

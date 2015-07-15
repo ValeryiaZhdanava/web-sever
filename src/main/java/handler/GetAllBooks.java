@@ -10,7 +10,8 @@ public class GetAllBooks implements IHandler {
 	res.setProtocol(req.getProtocol());
 	res.setVersionProtocol(req.getVersionProtocol());
 	res.setDescription("OK");
-
+	res.setStatusCode(200);
+	
     }
 
 }

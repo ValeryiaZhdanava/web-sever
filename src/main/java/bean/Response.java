@@ -11,19 +11,19 @@ public class Response {
     private int statusCode;
 
     public String getContentType() {
-        return contentType;
+	return contentType;
     }
 
     public void setContentType(String contentType) {
-        this.contentType = contentType;
+	this.contentType = contentType;
     }
 
     public String getContentLenght() {
-        return contentLenght;
+	return contentLenght;
     }
 
     public void setContentLenght(String contentLenght) {
-        this.contentLenght = contentLenght;
+	this.contentLenght = contentLenght;
     }
 
     public String getDescription() {
@@ -62,8 +62,19 @@ public class Response {
 	return statusCode;
     }
 
+    @Override
+    public String toString() {
+	return protocol + versionProtocol + description + contentType + body
+		+ contentLenght + statusCode;
+    }
+
     public void setStatusCode(int statusCode) {
 	this.statusCode = statusCode;
+    }
+
+    public void writeResponse() {
+	System.out.println(protocol + "/" + versionProtocol + " " + statusCode
+		+ " " + description+"\n");
     }
 
 }

@@ -22,7 +22,7 @@ public class Utils {
 	while (true) {
 	    requestString = request.readLine();
 	    headerValue.add(requestString);
-	     System.out.println(headerValue);
+	    System.out.println(requestString);
 	    if (requestString == null || requestString.trim().length() == 0) {
 		break;
 	    }
@@ -66,7 +66,7 @@ public class Utils {
 
     public static void getGetRequestLine(List<String> list, Request req) {
 	String line = list.get(0);
-	if (line.split("/")[1].trim().equalsIgnoreCase(" HTTP")) {
+	if (line.split(" ")[1].trim().equalsIgnoreCase(" HTTP")) {
 	    req.setProtocol(line.split(" ")[2].split("/")[1].trim());
 	    req.setVersionProtocol(line.split("/")[2].trim());
 	} else {
@@ -128,7 +128,7 @@ public class Utils {
 		res.getProtocol(), "/", res.getVersionProtocol());
 	String contentType = String.format("Content type: "
 		+ res.getContentType());
-	String contentLength = String.format("Content lenghtÖ "
+	String contentLength = String.format("Content lenght: "
 		+ res.getContentLenght());
 	String result = protocolVersion + " " + res.getStatusCode() + " "
 		+ res.getDescription() + "\r\n" + contentType + "\r\n"
